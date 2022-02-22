@@ -300,3 +300,23 @@ def overview_plot(id):
     plt.tight_layout()
     
     return plt
+
+
+def save_overview(tag, *args, **kwargs):
+    """Save overview plots for tagged sources
+
+    """
+    table = get_catalog(tag)
+    parent = '%s_overview' % tag.replace(' ', '_')
+    if not os.path.isdir(parent):
+        os.mkdir(parent)    
+
+    for row in table:
+        name = row['name'].replace(' ', '_')
+        p = overview_plot(row['id'])
+        p.savefig(f"{parent}/{name}_overview.png")
+        p.close()
+
+    os.system(f'tar -czf {parent}.tar.gz {parent}')
+
+    return
