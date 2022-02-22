@@ -83,9 +83,12 @@ def get_catalog(tag):
     
     # Add columns to the table
     for field in source_field_names:
-        table[field] = [getattr(s, field) for s in sources]
+        if field == 'name':
+            table[field] = [getattr(s, field) for s in sources]
+        else:
+            table[field] = np.array([getattr(s, field) for s in sources], dtype=float)
     for field in detection_field_names:
-        table[field] = [getattr(d, field) for d in detections]
+        table[field] = np.array([getattr(d, field) for d in detections], dtype=float)
     
     # Extract and add comments, if any
     column_comments = []
@@ -99,13 +102,22 @@ def get_catalog(tag):
     # Extract and add tags, if any
     column_tags = []
     for i in range(len(table)):
-        column_tags.append([]);
+        column_tags.append([])
         tags = TagSourceDetection.objects.filter(source_detection_id=SourceDetection.objects.get(detection_id=table["id"][i]))
         for tag in tags:
             column_tags[i].append(Tag.objects.get(id=tag.tag_id).name)
     table.add_column(col=column_tags, name="tags")
     
     return table
+
+
+def save_catalog(tag, *args, **kwargs):
+    """Write catalog of tagged sources. Remove object columns for write to file.
+
+    """
+    table = get_catalog(tag)
+    table.remove_columns(['comments', 'tags'])
+    table.write(*args, **kwargs)
 
 
 # Print list of supported tags
@@ -141,9 +153,10 @@ def retrieve_dss_image(longitude, latitude, width, height):
         coordinates="J2000",
         projection="Tan",
         width=width*u.deg,
-        height=height*u.deg
+        height=height*u.deg,
+        cache=None
     )
-    return hdulist[0][0];
+    return hdulist[0][0]
 
 
 # Create overview plot
@@ -222,7 +235,7 @@ def overview_plot(id):
     xmin = np.nanmin(xaxis)
     xmax = np.nanmax(xaxis)
     ymin = np.nanmin(data)
-    ymax = np.nanmax(data);
+    ymax = np.nanmax(data)
     ymin -= 0.1 * (ymax - ymin)
     ymax += 0.1 * (ymax - ymin)
     ax4 = plt.subplot(2, 2, 4)
@@ -236,9 +249,5 @@ def overview_plot(id):
     
     fig.canvas.draw()
     plt.tight_layout()
-    
-    # Clean up
-    clear_download_cache(pkgname="astroquery")
-    clear_download_cache()
     
     return plt
