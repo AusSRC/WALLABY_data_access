@@ -10,10 +10,11 @@ setup(
     packages=['wallaby_data_access'],
     install_requires=[
         'numpy',
-        'django',
         'astropy',
         'astroquery',
         'matplotlib',
+        'django',
+        'django_extensions',
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
