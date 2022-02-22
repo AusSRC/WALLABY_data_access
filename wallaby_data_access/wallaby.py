@@ -19,6 +19,8 @@ from astropy.visualization import PercentileInterval
 from astroquery.skyview import SkyView
 from astropy.utils.data import clear_download_cache
 
+from utils import write_products, write_bytesio_to_file, write_zipped_fits_file
+
 Run, Instance, Detection, Product, Source  = None, None, None, None, None
 SourceDetection, Comment, Tag, TagDetection, TagSourceDetection = None, None, None, None, None
 
@@ -118,6 +120,53 @@ def save_catalog(tag, *args, **kwargs):
     table = get_catalog(tag)
     table.remove_columns(['comments', 'tags'])
     table.write(*args, **kwargs)
+
+
+def save_products_for_source(tag, source_name, *args, **kwargs):
+    """Save source finding output products for a given source name.
+
+    """
+    table = get_catalog(tag)
+    try:
+        idx = list(table['name']).index(source_name)
+        row = table[idx]
+    except Exception as e:
+        sys.stderr.write("Could not find source with provided name in tagged data.")
+        return None
+    detection = Detection.objects.get(id=row['id'])
+    products = Product.objects.get(detection=detection)
+
+    name = source_name.replace(' ', '_')
+    parent = f'{name}_products'
+    if not os.path.isdir(parent):
+        os.mkdir(parent)
+    
+    # Write fits files
+    write_products(products, f'{parent}/{name}')
+    
+    return
+
+
+def save_products(tag, *args, **kwargs):
+    """Save source finding output products for a given tag
+
+    """
+    table = get_catalog(tag)
+    parent = '%s_products' % tag.replace(' ', '_')
+    if not os.path.isdir(parent):
+        os.mkdir(parent)
+
+    for row in table:
+        name = row['name'].replace(' ', '_')
+        if not os.path.isdir(f'{parent}/{name}'):
+            os.mkdir(f'{parent}/{name}')
+        detection = Detection.objects.get(id=row['id'])
+        products = Product.objects.get(detection=detection)
+        write_products(products, f'{parent}/{name}/{name}')
+
+    os.system(f'tar -czf {parent}.tar.gz {parent}')
+
+    return
 
 
 # Print list of supported tags
