@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='wallaby_data_access',
-    version='0.0.1',
+    version='0.0.3',
     description='Module for accessing WALLABY internal release data ',
     url='https://github.com/AusSRC/WALLABY_data_access',
     author='Austin Shen',
