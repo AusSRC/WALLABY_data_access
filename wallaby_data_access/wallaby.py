@@ -87,6 +87,9 @@ def connect():
     return
 
 
+# TODO(austin): get multiple catalogues by tags
+
+
 # Retrieve catalogue by tag
 def get_catalog(tag):
     tag = str(tag)
