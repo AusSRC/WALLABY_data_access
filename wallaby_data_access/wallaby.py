@@ -1,23 +1,27 @@
 import os
 import io
 import sys
+import csv
 import math
+import glob
+import shutil
 
 import numpy as np
-
 import django
 from django.db import models
-
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
 import astropy.units as u
 from astropy.table import Table
+from astropy.io.votable import from_table, writeto
+from astropy.io.votable.tree import Param
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.visualization import PercentileInterval
 from astroquery.skyview import SkyView
 from astropy.utils.data import clear_download_cache
+
 
 Run, Instance, Detection, Product, Source  = None, None, None, None, None
 SourceDetection, Comment, Tag, TagDetection, TagSourceDetection = None, None, None, None, None
@@ -35,7 +39,7 @@ def _write_bytesio_to_file(filename, bytesio):
         outfile.write(bytesio.getbuffer())
             
 
-def _write_zipped_fits_file(filename, product):
+def _write_zipped_fits_file(filename, product, compress=True):
     """Compress a .fits file as .fits.gz for a data product.
    
     """
@@ -44,7 +48,8 @@ def _write_zipped_fits_file(filename, product):
         buf.seek(0)
         if not os.path.isfile(filename):
             _write_bytesio_to_file(filename, buf)
-            os.system(f'gzip {filename}')
+            if compress:
+                os.system(f'gzip {filename}')
 
 
 def _write_products(products, prefix):
@@ -62,7 +67,6 @@ def _write_products(products, prefix):
         spec_file  = '%s_spec.txt' % (prefix)
         if not os.path.isfile(spec_file):
             _write_bytesio_to_file(spec_file, buf)
-
 
 
 # Connect to WALLABY database
@@ -146,9 +150,14 @@ def get_catalog(tag):
     for i in range(len(table)):
         column_tags.append([])
         tags = TagSourceDetection.objects.filter(source_detection_id=SourceDetection.objects.get(detection_id=table["id"][i]))
-        for tag in tags:
-            column_tags[i].append(Tag.objects.get(id=tag.tag_id).name)
+        for t in tags:
+            column_tags[i].append(Tag.objects.get(id=t.tag_id).name)
     table.add_column(col=column_tags, name="tags")
+
+    # Extract team release column
+    team_release = tag.replace('DR', 'TR')
+    column_team_release = [team_release] * len(table)
+    table.add_column(col=column_team_release, name='team_release')
     
     return table
 
@@ -358,5 +367,135 @@ def save_overview(tag, *args, **kwargs):
         p.close()
 
     os.system(f'tar -czf {parent}.tar.gz {parent}')
+
+    return
+
+
+def save_spectrum(detection, filename):
+    products = Product.objects.get(detection=detection)
+    spectrum = products.spec
+    
+    # store spectrum as numpy array     
+    array = []
+    with io.BytesIO() as buf:
+        buf.write(b''.join(products.spec))
+        buf.seek(0)
+        text = buf.getbuffer().tobytes().decode('utf-8')
+        lines = text.strip().split('\n')
+        for line in lines:
+            if not line.startswith('#'):
+                chan, freq, flux, pix = line.strip().split()
+                array.append(np.array([int(chan), float(freq), float(flux), int(pix)]))
+    array = np.array(array)
+    
+    # write to fits file
+    t = Table(array, names=('Channel', 'Frequency', 'Flux Density', 'Pixels'), dtype=(int, np.float32, np.float32, int))
+    t.write(filename, format='fits')
+    
+    # update spectrum metadata
+    spectrum = fits.open(filename, 'update')
+    spectrum[0].data = np.array([[[0]]]).astype('int16')
+    hdr = spectrum[0].header
+    hdr['WCSAXES'] = 3
+    hdr['CRPIX1'] = 0
+    hdr['CRPIX2'] = 0
+    hdr['CRPIX3'] = 0
+    hdr['CDELT1'] = -0.00166666
+    hdr['CDELT2'] = 0.00166666
+    hdr['CDELT3'] = 18518.
+    hdr['CUNIT1'] = 'deg'
+    hdr['CUNIT2'] = 'deg'
+    hdr['CUNIT3'] = 'Hz'
+    hdr['CTYPE1'] = 'RA---SIN'
+    hdr['CTYPE2'] = 'DEC--SIN'
+    hdr['CTYPE3'] = 'FREQ'
+    hdr['CRVAL1'] = detection.ra
+    hdr['CRVAL2'] = detection.dec
+    hdr['CRVAL3'] = detection.freq
+    spectrum.close()
+    return
+
+
+def casda_deposit(table, deposit_name):
+    """Export source data products and catalogue for Astropy table for CASDA release.
+    Will create an output directory with the deposit name and store products in that folder.
+
+    """
+    # ensure output directory exists
+    if not os.path.exists(deposit_name):
+        os.mkdir(deposit_name)
+    else:
+        raise Exception("Output directory exists but is not empty.")
+
+    # subdirectories
+    os.mkdir(f'{deposit_name}/catalogue')
+    os.mkdir(f'{deposit_name}/cubelets')
+    os.mkdir(f'{deposit_name}/spectra')
+    os.mkdir(f'{deposit_name}/moment_maps')
+
+    # Export products
+    for row in table:
+        name = row['name'].replace(' ', '_')
+        release = row['team_release'].replace(' ', '_')
+        detection = Detection.objects.get(id=row['id'])
+        products = Product.objects.get(detection=detection)
+        filename_prefix = f'{name}_{release}'
+        
+        # write .fits files
+        _write_zipped_fits_file('%s/%s/%s_cube.fits' % (deposit_name, 'cubelets', filename_prefix), products.cube, compress=False)
+        _write_zipped_fits_file('%s/%s/%s_chan.fits' % (deposit_name, 'moment_maps', filename_prefix), products.chan, compress=False)
+        _write_zipped_fits_file('%s/%s/%s_mask.fits' % (deposit_name, 'cubelets', filename_prefix), products.mask, compress=False)
+        _write_zipped_fits_file('%s/%s/%s_mom0.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom0, compress=False)
+        _write_zipped_fits_file('%s/%s/%s_mom1.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom1, compress=False)
+        _write_zipped_fits_file('%s/%s/%s_mom2.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom2, compress=False)
+        save_spectrum(detection, '%s/%s/%s_spec.fits' % (deposit_name, 'spectra', filename_prefix))
+
+        # add source name to each header file
+        product_files = glob.glob(f'{deposit_name}/{name}_{release}*.fits')
+        for f in product_files:
+            hdul = fits.open(f, 'update')
+            hdr = hdul[0].header
+            hdr['WALTR'] = release
+            hdul.close()
+
+        # TODO: add SDIBs to WALSBID header cards 
+
+    # Export catalogue
+    table.remove_column('id')
+    votable = from_table(table)
+    votable.version = '1.3'
+
+    table_columns = []
+    module_path = os.path.dirname(os.path.abspath(__file__))
+    with open(f'{module_path}/ucd.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            name, ucd, units = row
+            units = units.replace('pixel', 'pix')
+            if units == '-':
+                units = None
+            table_columns.append((name, ucd, units))
+
+    fields = []
+    for column in table_columns:
+        name, ucd, units = column
+        field = votable.get_field_by_id(name)
+        field.ucd = ucd
+        field.unit = units
+        fields.append(field)
+
+    for resource in votable.resources:
+        # add params
+        resource.params.append(Param(votable, ID='catalogueName', name='Catalogue Name', value=deposit_name, arraysize='59'))
+        resource.params.append(Param(votable, ID='indexedFields', name='Indexed Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
+        resource.params.append(Param(votable, ID='principalFields', name='Principal Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
+        
+        # update rows
+        for t in resource.tables:
+            for i, row in enumerate(fields):
+                t.fields[i] = row
+
+    catalogue_file = f'{deposit_name}/catalogue/catalogue.xml'
+    writeto(votable, catalogue_file)
 
     return
