@@ -9,6 +9,7 @@ import shutil
 import numpy as np
 import django
 from django.db import models
+from datetime import datetime
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
@@ -108,11 +109,18 @@ def get_catalog(tag):
     detection_field_names.remove("v_rad")
     detection_field_names.remove("l")
     detection_field_names.remove("b")
+    detection_field_names.remove("wm50")
     detection_field_names.remove("v_opt_peak")
     detection_field_names.remove("v_app_peak")
     detection_field_names.remove("v_rad_peak")
     detection_field_names.remove("l_peak")
     detection_field_names.remove("b_peak")
+    detection_field_names.remove("x_peak")
+    detection_field_names.remove("y_peak")
+    detection_field_names.remove("z_peak")
+    detection_field_names.remove("ra_peak")
+    detection_field_names.remove("dec_peak")
+    detection_field_names.remove("freq_peak")
     source_field_names = [field.name for field in Source._meta.fields if not isinstance(field, models.ForeignKey)]
     source_field_names.remove("id")
     
@@ -415,6 +423,13 @@ def save_spectrum(detection, filename):
     hdr['CRVAL1'] = detection.ra
     hdr['CRVAL2'] = detection.dec
     hdr['CRVAL3'] = detection.freq
+
+    # Provenance metadata
+    hdr['SBID'] = ''
+    hdr['SRCVER'] = ''
+    hdr['SRCTR'] = ''
+    hdr['DATE'] = datetime.now().isoformat()
+
     spectrum.close()
     return
 
@@ -463,40 +478,47 @@ def casda_deposit(table, deposit_name):
 
         # TODO: add SDIBs to WALSBID header cards 
 
-    # Export catalogue
-    table.remove_column('id')
-    votable = from_table(table)
-    votable.version = '1.3'
-
-    table_columns = []
+    # Read columns and metadata
+    table_columns = {}
     module_path = os.path.dirname(os.path.abspath(__file__))
-    with open(f'{module_path}/ucd.csv', 'r') as file:
+    with open(f'{module_path}/source_column_metadata.csv', 'r') as file:
         reader = csv.reader(file)
         for row in reader:
-            name, ucd, units = row
+            name, ucd, units, description = row
             units = units.replace('pixel', 'pix')
             if units == '-':
                 units = None
-            table_columns.append((name, ucd, units))
+            table_columns[name] = (ucd, units, description)
 
+    # Export catalogue
+    column_names = [k for k in table_columns.keys()]
+    table.remove_column('id')
+    table.remove_column('tags')
+    table.remove_column('comments')
+    table = table[column_names]
+    votable = from_table(table)
+    votable.version = '1.3'
+
+    # Update fields
     fields = []
-    for column in table_columns:
-        name, ucd, units = column
+    for name, meta in table_columns.items():
+        ucd, units, description = meta
         field = votable.get_field_by_id(name)
         field.ucd = ucd
         field.unit = units
+        field.description = description
         fields.append(field)
 
-    for resource in votable.resources:
-        # add params
-        resource.params.append(Param(votable, ID='catalogueName', name='Catalogue Name', value=deposit_name, arraysize='59'))
-        resource.params.append(Param(votable, ID='indexedFields', name='Indexed Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
-        resource.params.append(Param(votable, ID='principalFields', name='Principal Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
-        
+    for resource in votable.resources:        
         # update rows
         for t in resource.tables:
             for i, row in enumerate(fields):
                 t.fields[i] = row
+
+            # add params
+            t.params.append(Param(votable, ID='catalogueName', name='Catalogue Name', value=deposit_name, arraysize='59'))
+            t.params.append(Param(votable, ID='indexedFields', name='Indexed Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
+            t.params.append(Param(votable, ID='principalFields', name='Principal Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
 
     catalogue_file = f'{deposit_name}/catalogue/catalogue.xml'
     writeto(votable, catalogue_file)

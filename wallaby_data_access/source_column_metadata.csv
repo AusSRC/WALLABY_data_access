@@ -1,0 +1,35 @@
+name,meta.id;meta.main,-,WALLABY source name (WALLABY Jhhmmss±ddmmss)
+ra,pos.eq.ra;meta.main,deg,Right ascension (J2000) of centroid position
+dec,pos.eq.dec;meta.main,deg,Declination (J2000) of centroid position
+freq,em.freq;meta.main,Hz,Barycentric frequency of centroid position
+f_sum,phot.flux;meta.main,Jy*Hz,Integrated flux within 3D source mask
+err_f_sum,stat.error;phot.flux,Jy*Hz,Statistical uncertainty of integrated flux
+rms,instr.det.noise,Jy/beam,Local RMS noise level near source
+w20,spect.line.width;meta.main,Hz,Spectral line width at 20% of the peak (w20)
+w50,spect.line.width,Hz,Spectral line width at 50% of the peak (w50)
+kin_pa,pos.posAng,deg,Position angle of kinematic major axis
+rel,stat.probability,-,Statistical reliability of detection from 0 to 1
+qflag,meta.code.qual,-,Quality flag
+kflag,meta.code.kin,-,Kinematic model flag
+n_pix,meta.numnber;instr.pixel,-,Number of pixels in 3D source mask
+f_min,phot.flux.density;stat.min,Jy/beam,Lowest flux density value within 3D source mask
+f_max,phot.flux.density;stat.max,Jy/beam,Highest flux density value within 3D source mask
+ell_maj,phys.angSize.smajAxis,pixel,Major axis size of ellipse fitted to moment 0 map
+ell_min,phys.angSize.sminAxis,pixel,Minor axis size of ellipse fitted to moment 0 map
+ell_pa,pos.posAng,deg,Position angle of ellipse fitted to moment 0 map
+ell3s_maj,phys.angSize.smajAxis,pixel,Same as ell maj but > 3σ pixels only and equal weight
+ell3s_min,phys.angSize.sminAxis,pixel,Same as ell min but > 3σ pixels only and equal weight
+ell3s_pa,pos.posAng,deg,Same as ell pa but > 3σ pixels only and equal weight
+x,pos.cartesian.x,pixel,Centroid position in x
+err_x,stat.error;pos.cartesian.x,pixel,Statistical uncertainty of centroid position
+y,pos.cartesian.y,pixel,Centroid position in y
+err_y,stat.error;pos.cartesian.y,pixel,Statistical uncertainty of centroid position
+z,pos.cartesian.z,pixel,Centroid position in z
+err_z,stat.error;pos.cartesian.z,pixel,Statistical uncertainty of centroid position
+x_min,pos.cartesian.x;stat.min,pixel,Lower end of bounding box in x
+x_max,pos.cartesian.x;stat.max,pixel,Upper end of bounding box in x
+y_min,pos.cartesian.y;stat.min,pixel,Lower end of bounding box in y
+y_max,pos.cartesian.y;stat.max,pixel,Upper end of bounding box in y
+z_min,pos.cartesian.z;stat.min,pixel,Lower end of bounding box in z
+z_max,pos.cartesian.z;stat.max,pixel,Upper end of bounding box in z
+team_release,meta.dataset;meta.main,-,Internal team release main
