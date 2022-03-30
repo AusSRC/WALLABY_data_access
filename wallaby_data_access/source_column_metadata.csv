@@ -11,7 +11,7 @@ kin_pa,pos.posAng,deg,Position angle of kinematic major axis
 rel,stat.probability,-,Statistical reliability of detection from 0 to 1
 qflag,meta.code.qual,-,Quality flag
 kflag,meta.code.kin,-,Kinematic model flag
-n_pix,meta.numnber;instr.pixel,-,Number of pixels in 3D source mask
+n_pix,meta.number;instr.pixel,-,Number of pixels in 3D source mask
 f_min,phot.flux.density;stat.min,Jy/beam,Lowest flux density value within 3D source mask
 f_max,phot.flux.density;stat.max,Jy/beam,Highest flux density value within 3D source mask
 ell_maj,phys.angSize.smajAxis,pixel,Major axis size of ellipse fitted to moment 0 map

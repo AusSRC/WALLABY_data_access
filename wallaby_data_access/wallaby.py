@@ -167,7 +167,7 @@ def get_catalog(tag):
 
     # Extract team release column
     team_release = tag.replace('DR', 'TR')
-    column_team_release = [team_release] * len(table)
+    column_team_release = [str(team_release)] * len(table)
     table.add_column(col=column_team_release, name='team_release')
     
     return table
@@ -508,6 +508,8 @@ def casda_deposit(table, deposit_name):
         field.unit = units
         field.description = description
         fields.append(field)
+        if field.datatype == 'unicodeChar':
+            field.datatype = 'char'
 
     for resource in votable.resources:        
         # update rows
