@@ -1,4 +1,4 @@
-name,meta.id;meta.main,-,WALLABY source name (WALLABY Jhhmmss±ddmmss)
+name,meta.id;meta.main,-,WALLABY source name (WALLABY Jhhmmss+/-ddmmss)
 ra,pos.eq.ra;meta.main,deg,Right ascension (J2000) of centroid position
 dec,pos.eq.dec;meta.main,deg,Declination (J2000) of centroid position
 freq,em.freq;meta.main,Hz,Barycentric frequency of centroid position
@@ -17,9 +17,9 @@ f_max,phot.flux.density;stat.max,Jy/beam,Highest flux density value within 3D so
 ell_maj,phys.angSize.smajAxis,pixel,Major axis size of ellipse fitted to moment 0 map
 ell_min,phys.angSize.sminAxis,pixel,Minor axis size of ellipse fitted to moment 0 map
 ell_pa,pos.posAng,deg,Position angle of ellipse fitted to moment 0 map
-ell3s_maj,phys.angSize.smajAxis,pixel,Same as ell maj but > 3σ pixels only and equal weight
-ell3s_min,phys.angSize.sminAxis,pixel,Same as ell min but > 3σ pixels only and equal weight
-ell3s_pa,pos.posAng,deg,Same as ell pa but > 3σ pixels only and equal weight
+ell3s_maj,phys.angSize.smajAxis,pixel,Same as ell maj but > 3 sigma pixels only and equal weight
+ell3s_min,phys.angSize.sminAxis,pixel,Same as ell min but > 3 sigma pixels only and equal weight
+ell3s_pa,pos.posAng,deg,Same as ell pa but > 3 sigma pixels only and equal weight
 x,pos.cartesian.x,pixel,Centroid position in x
 err_x,stat.error;pos.cartesian.x,pixel,Statistical uncertainty of centroid position
 y,pos.cartesian.y,pixel,Centroid position in y

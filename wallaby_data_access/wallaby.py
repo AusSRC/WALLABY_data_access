@@ -450,6 +450,7 @@ def casda_deposit(table, deposit_name):
     os.mkdir(f'{deposit_name}/cubelets')
     os.mkdir(f'{deposit_name}/spectra')
     os.mkdir(f'{deposit_name}/moment_maps')
+    os.mkdir(f'{deposit_name}/plots')
 
     # Export products
     for row in table:
@@ -477,6 +478,13 @@ def casda_deposit(table, deposit_name):
             hdul.close()
 
         # TODO: add SDIBs to WALSBID header cards 
+
+        # TODO: add moment 0 maps (png) to products under separate folder
+        mom0, _ = get_image(products.mom0)
+        plt.imshow(mom0)
+        plt.axis('off')
+        plt.savefig('%s/%s/%s_mom0.png' % (deposit_name, 'plots', filename_prefix))
+        plt.close()
 
     # Read columns and metadata
     table_columns = {}
