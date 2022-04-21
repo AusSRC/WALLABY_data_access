@@ -178,7 +178,7 @@ def save_catalog(tag, *args, **kwargs):
 
     """
     table = get_catalog(tag)
-    table.remove_columns(['comments', 'tags'])
+    table.remove_columns(['tags'])
     table.write(*args, **kwargs)
 
 
@@ -502,7 +502,6 @@ def casda_deposit(table, deposit_name):
     column_names = [k for k in table_columns.keys()]
     table.remove_column('id')
     table.remove_column('tags')
-    table.remove_column('comments')
     table = table[column_names]
     votable = from_table(table)
     votable.version = '1.3'

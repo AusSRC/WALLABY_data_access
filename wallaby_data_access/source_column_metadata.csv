@@ -32,4 +32,5 @@ y_min,pos.cartesian.y;stat.min,pixel,Lower end of bounding box in y
 y_max,pos.cartesian.y;stat.max,pixel,Upper end of bounding box in y
 z_min,pos.cartesian.z;stat.min,pixel,Lower end of bounding box in z
 z_max,pos.cartesian.z;stat.max,pixel,Upper end of bounding box in z
+comments,meta.note,-,Comments
 team_release,meta.dataset;meta.main,-,Internal team release main
