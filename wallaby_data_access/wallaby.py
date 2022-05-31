@@ -25,7 +25,7 @@ from astropy.utils.data import clear_download_cache
 
 
 Run, Instance, Detection, Product, Source  = None, None, None, None, None
-SourceDetection, Comment, Tag, TagDetection, TagSourceDetection = None, None, None, None, None
+SourceDetection, Comment, Tag, TagSourceDetection = None, None, None, None
 
 
 # utils
@@ -73,7 +73,7 @@ def _write_products(products, prefix):
 # Connect to WALLABY database
 def connect():
     global Run, Instance, Detection, Product, Source
-    global SourceDetection, Comment, Tag, TagDetection, TagSourceDetection
+    global SourceDetection, Comment, Tag, TagSourceDetection
     os.environ["DJANGO_SECRET_KEY"] = "-=(gyah-@e$-ymbz02mhwu6461zv&1&8uojya413ylk!#bwa-l"
     os.environ["DJANGO_SETTINGS_MODULE"] = "api.settings"
     os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "True"
@@ -84,7 +84,7 @@ def connect():
     sys.path.append("/mnt/shared/wallaby/apps/SoFiAX_services/api/")
     django.setup()
     from tables.models import Run, Instance, Detection, Product, Source
-    from tables.models import SourceDetection, Comment, Tag, TagDetection, TagSourceDetection
+    from tables.models import SourceDetection, Comment, Tag, TagSourceDetection
     return
 
 
@@ -169,7 +169,16 @@ def get_catalog(tag):
     team_release = tag.replace('DR', 'TR')
     column_team_release = [str(team_release)] * len(table)
     table.add_column(col=column_team_release, name='team_release')
-    
+
+    # Add additional properties
+    c = 299792.458
+    H0 = 70
+    f0 = 1.420405751768E9
+    dist_h = c * ((f0 / table['freq']) - 1.0) / H0
+    HI_mass = np.log10(49.7 * dist_h ** 2 * table['f_sum'])
+    table.add_column(col=dist_h, name='dist_h')
+    table.add_column(col=HI_mass, name='log_m_hi')
+
     return table
 
 

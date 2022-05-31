@@ -34,3 +34,5 @@ z_min,pos.cartesian.z;stat.min,pixel,Lower end of bounding box in z
 z_max,pos.cartesian.z;stat.max,pixel,Upper end of bounding box in z
 comments,meta.note,-,Comments on individual sources
 team_release,meta.dataset;meta.main,-,Internal WALLABY team release identifier
+dist_h,pos.distance,Mpc,Local Hubble distance derived from the barycentric source frequency
+log_m_hi,phys.mass,Msol,HI mass log(M_hi/M_sol) derived from the local Hubble distance
