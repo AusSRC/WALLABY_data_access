@@ -3,6 +3,7 @@
 """
 
 import os
+import shutil
 import pytest
 import warnings
 from src import wallaby
@@ -10,6 +11,7 @@ from src import wallaby
 
 OVERVIEW_PLOT_ID = 4713
 TAG_NAME = 'NGC 5044 DR1'
+SOURCE_NAME = 'WALLABY J134002-252831'
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -36,5 +38,10 @@ def test_save_catalog():
     filename = "%s.fits" % TAG_NAME.replace(' ', '_')
     if not os.path.exists(filename):
         wallaby.save_catalog(TAG_NAME, filename, format = 'fits')
-    if os.path.exists(filename):
-        os.remove(filename)
+    os.remove(filename)
+
+
+def test_save_products():
+    filename = f'{SOURCE_NAME.replace(" ", "_")}_products'
+    wallaby.save_products_for_source(TAG_NAME, SOURCE_NAME)
+    shutil.rmtree(filename)
