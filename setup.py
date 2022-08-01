@@ -15,6 +15,7 @@ setup(
         'matplotlib',
         'django',
         'django_extensions',
+        'psycopg2-binary'
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

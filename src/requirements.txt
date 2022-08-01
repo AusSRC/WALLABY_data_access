@@ -3,3 +3,4 @@ matplotlib
 astropy
 astroquery
 numpy
+psycopg2-binary
