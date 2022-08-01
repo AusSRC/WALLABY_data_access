@@ -7,7 +7,7 @@ setup(
     url='https://github.com/AusSRC/WALLABY_data_access',
     author='Austin Shen',
     author_email='austin.shen@csiro.au',
-    packages=['wallaby_data_access'],
+    packages=['src'],
     install_requires=[
         'numpy',
         'astropy',
