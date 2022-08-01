@@ -445,12 +445,12 @@ def casda_deposit(table, deposit_name):
         filename_prefix = f'{name}_{release}'
 
         # write .fits files
-        _write_zipped_fits_file('%s/%s/%s_cube.fits' % (deposit_name, 'cubelets', filename_prefix), products.cube, compress=False)
-        _write_zipped_fits_file('%s/%s/%s_chan.fits' % (deposit_name, 'moment_maps', filename_prefix), products.chan, compress=False)
-        _write_zipped_fits_file('%s/%s/%s_mask.fits' % (deposit_name, 'cubelets', filename_prefix), products.mask, compress=False)
-        _write_zipped_fits_file('%s/%s/%s_mom0.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom0, compress=False)
-        _write_zipped_fits_file('%s/%s/%s_mom1.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom1, compress=False)
-        _write_zipped_fits_file('%s/%s/%s_mom2.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom2, compress=False)
+        _write_zipped_fits_file('%s/%s/%s_cube.fits' % (deposit_name, 'cubelets', filename_prefix), products.cube, compress=False)  # noqa
+        _write_zipped_fits_file('%s/%s/%s_chan.fits' % (deposit_name, 'moment_maps', filename_prefix), products.chan, compress=False)  # noqa
+        _write_zipped_fits_file('%s/%s/%s_mask.fits' % (deposit_name, 'cubelets', filename_prefix), products.mask, compress=False)  # noqa
+        _write_zipped_fits_file('%s/%s/%s_mom0.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom0, compress=False)  # noqa
+        _write_zipped_fits_file('%s/%s/%s_mom1.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom1, compress=False)  # noqa
+        _write_zipped_fits_file('%s/%s/%s_mom2.fits' % (deposit_name, 'moment_maps', filename_prefix), products.mom2, compress=False)  # noqa
         save_spectrum(detection, '%s/%s/%s_spec.fits' % (deposit_name, 'spectra', filename_prefix))
 
         # add source name to each header file
@@ -509,9 +509,9 @@ def casda_deposit(table, deposit_name):
                 t.fields[i] = row
 
             # add params
-            t.params.append(Param(votable, ID='catalogueName', name='Catalogue Name', value=deposit_name, arraysize='59'))
-            t.params.append(Param(votable, ID='indexedFields', name='Indexed Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
-            t.params.append(Param(votable, ID='principalFields', name='Principal Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))
+            t.params.append(Param(votable, ID='catalogueName', name='Catalogue Name', value=deposit_name, arraysize='59'))  # noqa
+            t.params.append(Param(votable, ID='indexedFields', name='Indexed Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))  # noqa
+            t.params.append(Param(votable, ID='principalFields', name='Principal Fields', value='name,ra,dec,freq,f_sum,w20,team_release', arraysize='255'))  # noqa
 
     catalogue_file = f'{deposit_name}/catalogue/catalogue.xml'
     writeto(votable, catalogue_file)

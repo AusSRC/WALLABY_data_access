@@ -25,19 +25,19 @@ def test_print_tags():
 
 def test_get_table():
     table = wallaby.get_catalog(TAG_NAME)
-    assert(table is not None)
+    assert (table is not None)
     table.sort("f_sum", reverse=True)
 
 
 def test_overview_plot():
     warnings.filterwarnings("ignore")
-    plt = wallaby.overview_plot(id=OVERVIEW_PLOT_ID)
+    wallaby.overview_plot(id=OVERVIEW_PLOT_ID)
 
 
 def test_save_catalog():
     filename = "%s.fits" % TAG_NAME.replace(' ', '_')
     if not os.path.exists(filename):
-        wallaby.save_catalog(TAG_NAME, filename, format = 'fits')
+        wallaby.save_catalog(TAG_NAME, filename, format='fits')
     os.remove(filename)
 
 
