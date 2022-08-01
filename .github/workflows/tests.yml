@@ -12,6 +12,7 @@ jobs:
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASS: ${{ secrets.DATABASE_PASS }}
       WALLABY_DATABASE_PATH: './WALLABY_database'
+      PYTHONPATH: .
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -26,7 +27,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
       - run: git clone https://github.com/AusSRC/WALLABY_database.git
+      - run: echo "PYTHONPATH=WALLABY_data_access" >> $GITHUB_ENV
       - run: pip3 install -r src/requirements.txt
       - run: pip3 install -r tests/requirements.txt
-      - run: export PYTHONPATH=.
       - run: pytest -vs tests
