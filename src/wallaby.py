@@ -57,6 +57,8 @@ def get_catalog(tag):
     # Get field names
     detection_field_names = [field.name for field in Detection._meta.fields if not isinstance(field, models.ForeignKey)]
     detection_field_names.remove("name")
+    detection_field_names.remove("access_url")
+    detection_field_names.remove("access_format")
     detection_field_names.remove("unresolved")
     detection_field_names.remove("v_opt")
     detection_field_names.remove("v_app")
