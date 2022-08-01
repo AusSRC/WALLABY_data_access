@@ -16,7 +16,10 @@ SOURCE_NAME = 'WALLABY J134002-252831'
 
 @pytest.fixture(scope="session", autouse=True)
 def django_setup():
-    wallaby.connect()
+    if 'WALLABY_DATABASE_PATH' in os.environ:
+        wallaby.connect(os.environ['WALLABY_DATABASE_PATH'])
+    else:
+        wallaby.connect()
 
 
 def test_print_tags():

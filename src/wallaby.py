@@ -26,15 +26,15 @@ Run, Instance, Detection, Product, Source = None, None, None, None, None
 SourceDetection, Comment, Tag, TagSourceDetection = None, None, None, None
 
 
-def connect():
+def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
     """Establish connection to database through Django models
 
     """
     global Run, Instance, Detection, Product, Source
     global SourceDetection, Comment, Tag, TagSourceDetection
     load_dotenv()
-    sys.path.append("/mnt/shared/wallaby/apps/WALLABY_database")
-    sys.path.append("/mnt/shared/wallaby/apps/WALLABY_database/orm")
+    sys.path.append(path)
+    sys.path.append(path + "/orm")
     django.setup()
     from source_finding.models import Run, Instance, Detection, Product, Source
     from source_finding.models import SourceDetection, Comment, Tag, TagSourceDetection
