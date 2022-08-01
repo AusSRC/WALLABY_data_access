@@ -4,3 +4,4 @@ astropy
 astroquery
 numpy
 psycopg2-binary
+python-dotenv

@@ -28,4 +28,5 @@ jobs:
       - run: git clone https://github.com/AusSRC/WALLABY_database.git
       - run: pip3 install -r src/requirements.txt
       - run: pip3 install -r tests/requirements.txt
-      - run: pytest -vs
+      - run: export PYTHONPATH=.
+      - run: pytest -vs tests
