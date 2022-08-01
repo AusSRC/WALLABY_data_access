@@ -24,6 +24,6 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
-      - run: pip3 install -r orm/requirements.txt
+      - run: pip3 install -r src/requirements.txt
       - run: pip3 install -r tests/requirements.txt
       - run: pytest -vs
