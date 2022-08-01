@@ -145,7 +145,8 @@ def save_catalog(tag, *args, **kwargs):
 
     """
     table = get_catalog(tag)
-    table.remove_columns(['tags'])
+    table['comments'] = [''.join(comment) for comment in table['comments']]
+    table['tags'] = [''.join(t) for t in table['tags']]
     table.write(*args, **kwargs)
 
 
