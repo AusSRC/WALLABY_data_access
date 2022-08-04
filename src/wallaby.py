@@ -24,6 +24,7 @@ from src.utils.io import _write_products, _write_zipped_fits_file
 
 Run, Instance, Detection, Product, Source = None, None, None, None, None
 SourceDetection, Comment, Tag, TagSourceDetection = None, None, None, None
+Observation, ObservationMetadata, Tile, Postprocessing = None, None, None, None
 
 
 def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
@@ -32,13 +33,55 @@ def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
     """
     global Run, Instance, Detection, Product, Source
     global SourceDetection, Comment, Tag, TagSourceDetection
+    global Observation, ObservationMetadata, Tile, Postprocessing
     load_dotenv()
     sys.path.append(path)
     sys.path.append(path + "/orm")
     django.setup()
     from source_finding.models import Run, Instance, Detection, Product, Source
     from source_finding.models import SourceDetection, Comment, Tag, TagSourceDetection
+    from operations.models import Observation, ObservationMetadata, Tile, Postprocessing
     return
+
+
+def get_slurm_output(source_name):
+    """Get slurmOutput metadata for a given source
+    TODO(austin): move into metadata submodule
+
+    """
+    source = Source.objects.get(name=source_name)
+    sd = SourceDetection.objects.get(source=source)
+    detection = Detection.objects.get(id=sd.detection_id)
+    run = Run.objects.get(id=detection.run_id)
+    postprocessing = Postprocessing.objects.get(run_id=run.id)
+    tile = Tile.objects.get(identifier=postprocessing.name)
+    obs_A = Observation.objects.get(id=tile.footprint_A.id)
+    obs_B = Observation.objects.get(id=tile.footprint_B.id)
+    meta_A = ObservationMetadata.objects.get(observation=obs_A)
+    meta_B = ObservationMetadata.objects.get(observation=obs_B)
+    return {
+        str(obs_A.sbid): meta_A.__dict__['slurm_output'],
+        str(obs_B.sbid): meta_B.__dict__['slurm_output']
+    }
+
+
+# TODO(austin): rename this
+def get_source_beam_processing_info(source_name):
+    """Get beam processing information by parsing slurmOutput
+    TODO(austin): move into metadata submodule
+
+    """
+    holography_keywords = [
+        'ASKAP_PB_TT_IMAGE'.lower(),
+        'ASKAP_PB_CUBE_IMAGE'.lower()
+    ]
+
+    slurm_output = get_slurm_output(source_name)
+    beam_info = {}
+    for k, v in slurm_output.items():
+        use_holography = all([hkw in v.keys() for hkw in holography_keywords])
+        beam_info[k] = use_holography
+    return beam_info
 
 
 def get_catalog(tag):
