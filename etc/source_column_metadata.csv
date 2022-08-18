@@ -10,7 +10,7 @@ w50,spect.line.width,Hz,Spectral line width at 50% of the peak (w50)
 kin_pa,pos.posAng,deg,Position angle of kinematic major axis
 rel,stat.probability,-,Statistical reliability of detection from 0 to 1
 qflag,meta.code.qual,-,Source finding quality flag
-kflag,meta.code.kin,-,Kinematic model flag
+kflag,meta.code,-,Kinematic model flag
 n_pix,meta.number;instr.pixel,-,Number of pixels in 3D source mask
 f_min,phot.flux.density;stat.min,Jy/beam,Lowest flux density value within 3D source mask
 f_max,phot.flux.density;stat.max,Jy/beam,Highest flux density value within 3D source mask
