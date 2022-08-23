@@ -25,6 +25,7 @@ from src.utils.io import _write_products, _write_zipped_fits_file
 Run, Instance, Detection, Product, Source = None, None, None, None, None
 SourceDetection, Comment, Tag, TagSourceDetection = None, None, None, None
 Observation, ObservationMetadata, Tile, Postprocessing = None, None, None, None
+KinematicModel = None
 
 
 def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
@@ -34,6 +35,7 @@ def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
     global Run, Instance, Detection, Product, Source
     global SourceDetection, Comment, Tag, TagSourceDetection
     global Observation, ObservationMetadata, Tile, Postprocessing
+    global KinematicModel
     load_dotenv()
     sys.path.append(path)
     sys.path.append(path + "/orm")
@@ -41,6 +43,7 @@ def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
     from source_finding.models import Run, Instance, Detection, Product, Source
     from source_finding.models import SourceDetection, Comment, Tag, TagSourceDetection
     from operations.models import Observation, ObservationMetadata, Tile, Postprocessing
+    from kinematic_model.models import KinematicModel
     return
 
 
@@ -65,8 +68,8 @@ def get_slurm_output(source_name):
     }
 
 
-# TODO(austin): rename this
-def get_source_beam_processing_info(source_name):
+# TODO(austin): some better descriptions
+def get_primary_beam_correction_uses_holography(source_name):
     """Get beam processing information by parsing slurmOutput
     TODO(austin): move into metadata submodule
 
@@ -246,6 +249,41 @@ def print_tags():
     for tag in tags:
         print("{:20s}\t{:s}".format("\"" + tag.name + "\"", tag.description))
     return
+
+
+# Print list of kinematic model tags
+def get_kinematic_model_tags():
+    tr_tags = [k.team_release_kin for k in KinematicModel.objects.all()]
+    return list(set(tr_tags))
+
+
+# Get the kinematic model for sources
+def get_kinematic_model(source):
+    pass
+
+
+# Get table of kinematic models for a given team release
+def get_kinematic_model_catalog(team_release):
+    table = Table()
+
+    kin_models = KinematicModel.objects.filter(team_release_kin=team_release)
+    columns = [f.name for f in KinematicModel._meta.fields]
+    string_columns = ['team_release', 'team_release_kin']
+    array_columns = ["Rad", "Vrot_model", "e_Vrot_model", "e_Vrot_model_inc", "Rad_SD", "SD_model", "SD_FO_model", "e_SD_model", "e_SD_FO_model_inc"]
+
+    for field in columns:
+        if field == 'name':
+            table[field] = [getattr(k, field).name for k in kin_models]
+        elif field in string_columns:
+            table[field] = [getattr(k, field) for k in kin_models]
+        elif field in array_columns:
+            table[field] = [np.array([v for v in getattr(k, field).split(",")]) for k in kin_models]
+        elif field == 'QFlag_model':
+            table[field] = np.array([getattr(k, field) for k in kin_models], dtype=int)
+        else:
+            table[field] = np.array([getattr(k, field) for k in kin_models], dtype=float)
+
+    return table
 
 
 # Retrieve FITS image from database

@@ -56,5 +56,14 @@ def test_get_slurmoutput_metadata():
 
 
 def test_get_beam_correction_metadata():
-    beam_info = wallaby.get_source_beam_processing_info(SOURCE_NAME)
-    assert (beam_info is not None)
+    used_holography = wallaby.get_primary_beam_correction_uses_holography(SOURCE_NAME)
+    assert (used_holography is not None)
+
+
+def test_get_kinematic_model_data():
+    kin_tags = wallaby.get_kinematic_model_tags()
+    assert (kin_tags is not None)
+    kin_cat = wallaby.get_kinematic_model_catalog(team_release=kin_tags[0])
+    assert (kin_cat is not None)
+
+    # TODO(austin): fetch instance for example
