@@ -257,33 +257,30 @@ def get_kinematic_model_tags():
     return list(set(tr_tags))
 
 
-# Get the kinematic model for sources
-def get_kinematic_model(source):
-    pass
-
-
-# Get table of kinematic models for a given team release
-def get_kinematic_model_catalog(team_release):
+def _get_kinematic_model_table(objects):
     table = Table()
-
-    kin_models = KinematicModel.objects.filter(team_release_kin=team_release)
     columns = [f.name for f in KinematicModel._meta.fields]
     string_columns = ['team_release', 'team_release_kin']
     array_columns = ["Rad", "Vrot_model", "e_Vrot_model", "e_Vrot_model_inc", "Rad_SD", "SD_model", "SD_FO_model", "e_SD_model", "e_SD_FO_model_inc"]
-
     for field in columns:
         if field == 'name':
-            table[field] = [getattr(k, field).name for k in kin_models]
+            table[field] = [getattr(k, field).name for k in objects]
         elif field in string_columns:
-            table[field] = [getattr(k, field) for k in kin_models]
+            table[field] = [getattr(k, field) for k in objects]
         elif field in array_columns:
-            table[field] = [np.array([v for v in getattr(k, field).split(",")]) for k in kin_models]
+            table[field] = [np.array([v for v in getattr(k, field).split(",")]) for k in objects]
         elif field == 'QFlag_model':
-            table[field] = np.array([getattr(k, field) for k in kin_models], dtype=int)
+            table[field] = np.array([getattr(k, field) for k in objects], dtype=int)
         else:
-            table[field] = np.array([getattr(k, field) for k in kin_models], dtype=float)
-
+            table[field] = np.array([getattr(k, field) for k in objects], dtype=float)
     return table
+
+
+
+# Generic function for getting kinematic models as astropy.Table
+def get_kinematic_model(*args, **kwargs):
+    res = KinematicModel.objects.filter(**kwargs)
+    return _get_kinematic_model_table(res)
 
 
 # Retrieve FITS image from database

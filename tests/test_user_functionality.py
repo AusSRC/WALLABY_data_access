@@ -63,7 +63,10 @@ def test_get_beam_correction_metadata():
 def test_get_kinematic_model_data():
     kin_tags = wallaby.get_kinematic_model_tags()
     assert (kin_tags is not None)
-    kin_cat = wallaby.get_kinematic_model_catalog(team_release=kin_tags[0])
+
+    kin_cat = wallaby.get_kinematic_model(team_release_kin=kin_tags[0])
     assert (kin_cat is not None)
 
-    # TODO(austin): fetch instance for example
+    res = wallaby.get_kinematic_model(name=kin_cat[0]['name'])
+    assert (res is not None)
+    assert (len(res) == 1)
