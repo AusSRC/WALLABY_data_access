@@ -6,7 +6,7 @@ import os
 import shutil
 import pytest
 import warnings
-from src import wallaby
+from wallaby_data_access import wallaby
 
 
 OVERVIEW_PLOT_ID = 4713
