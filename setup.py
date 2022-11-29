@@ -2,12 +2,12 @@ from setuptools import setup
 
 setup(
     name='wallaby_data_access',
-    version='0.1.1',
+    version='0.2.1',
     description='Module for accessing WALLABY internal release data ',
     url='https://github.com/AusSRC/WALLABY_data_access',
     author='Austin Shen',
     author_email='austin.shen@csiro.au',
-    packages=['src'],
+    packages=['wallaby_data_access'],
     install_requires=[
         'numpy',
         'astropy',
@@ -15,7 +15,8 @@ setup(
         'matplotlib',
         'django',
         'django_extensions',
-        'psycopg2-binary'
+        'psycopg2-binary',
+        'python-dotenv'
     ],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
