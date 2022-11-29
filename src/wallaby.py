@@ -36,7 +36,7 @@ def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
     global SourceDetection, Comment, Tag, TagSourceDetection
     global Observation, ObservationMetadata, Tile, Postprocessing
     global KinematicModel
-    load_dotenv()
+    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
     sys.path.append(path)
     sys.path.append(path + "/orm")
     django.setup()
@@ -259,22 +259,22 @@ def get_kinematic_model_tags():
 
 def _get_kinematic_model_table(objects):
     table = Table()
+    sources = [km.source for km in objects]
     columns = [f.name for f in KinematicModel._meta.fields]
     string_columns = ['team_release', 'team_release_kin']
-    array_columns = ["Rad", "Vrot_model", "e_Vrot_model", "e_Vrot_model_inc", "Rad_SD", "SD_model", "SD_FO_model", "e_SD_model", "e_SD_FO_model_inc"]
+    array_columns = ["rad", "vrot_model", "e_vrot_model", "e_vrot_model_inc", "rad_sd", "sd_model", "sd_fo_model", "e_sd_model", "e_sd_fo_model_inc"]
     for field in columns:
-        if field == 'name':
-            table[field] = [getattr(k, field).name for k in objects]
+        if field == 'source':
+            table[field] = np.array([s.name for s in sources], dtype=str)
         elif field in string_columns:
             table[field] = [getattr(k, field) for k in objects]
         elif field in array_columns:
-            table[field] = [np.array([v for v in getattr(k, field).split(",")]) for k in objects]
-        elif field == 'QFlag_model':
+            table[field] = [np.array([float(v) for v in getattr(k, field).split(",")]) for k in objects]
+        elif field == 'qflag_model':
             table[field] = np.array([getattr(k, field) for k in objects], dtype=int)
         else:
             table[field] = np.array([getattr(k, field) for k in objects], dtype=float)
     return table
-
 
 
 # Generic function for getting kinematic models as astropy.Table
