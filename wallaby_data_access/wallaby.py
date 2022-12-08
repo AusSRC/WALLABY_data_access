@@ -2,47 +2,47 @@ import os
 import io
 import sys
 import csv
-import math
 import glob
+import logging
 import numpy as np
 from dotenv import load_dotenv
 import django
 from django.db import models
 from datetime import datetime
+import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-import astropy.units as u
 from astropy.table import Table
 from astropy.io.votable import from_table, writeto
 from astropy.io.votable.tree import Param
 from astropy.io import fits
-from astropy.wcs import WCS
-from astropy.visualization import PercentileInterval
-from astroquery.skyview import SkyView
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 Run, Instance, Detection, Product, Source = None, None, None, None, None
 SourceDetection, Comment, Tag, TagSourceDetection = None, None, None, None
 Observation, ObservationMetadata, Tile, Postprocessing = None, None, None, None
-KinematicModel = None
+KinematicModel, WKAPPProduct = None, None
 
 
-def connect(path="/mnt/shared/wallaby/apps/WALLABY_database"):
-    """Establish connection to database through Django models
+def connect(db="/mnt/shared/wallaby/apps/WALLABY_database", env="/mnt/shared/wallaby/apps/WALLABY_data_access/wallaby_data_access/.env"):
+    """Establish connection to database through Django models.
+    Need to specify path to database directory and .env file for Django settings environment variables.
 
     """
     global Run, Instance, Detection, Product, Source
     global SourceDetection, Comment, Tag, TagSourceDetection
     global Observation, ObservationMetadata, Tile, Postprocessing
-    global KinematicModel
-    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
-    sys.path.append(path)
-    sys.path.append(path + "/orm")
+    global KinematicModel, WKAPPProduct
+    load_dotenv(env)
+    sys.path.append(db)
+    sys.path.append(db + "/orm")
     django.setup()
     from source_finding.models import Run, Instance, Detection, Product, Source
     from source_finding.models import SourceDetection, Comment, Tag, TagSourceDetection
     from operations.models import Observation, ObservationMetadata, Tile, Postprocessing
-    from kinematic_model.models import KinematicModel
+    from kinematic_model.models import KinematicModel, WKAPPProduct
     return
 
 
@@ -70,21 +70,38 @@ def _write_zipped_fits_file(filename, product, compress=True):
                 os.system(f'gzip {filename}')
 
 
-def _write_products(products, prefix):
-    _write_zipped_fits_file('%s_cube.fits' % (prefix), products.cube)
-    _write_zipped_fits_file('%s_chan.fits' % (prefix), products.chan)
-    _write_zipped_fits_file('%s_mask.fits' % (prefix), products.mask)
-    _write_zipped_fits_file('%s_mom0.fits' % (prefix), products.mom0)
-    _write_zipped_fits_file('%s_mom1.fits' % (prefix), products.mom1)
-    _write_zipped_fits_file('%s_mom2.fits' % (prefix), products.mom2)
+def _write_source_products(products, output_dir, name):
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_cube.fits'), products.cube)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_chan.fits'), products.chan)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_mask.fits'), products.mask)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_mom0.fits'), products.mom0)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_mom1.fits'), products.mom1)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_mom2.fits'), products.mom2)
 
     # Open spectrum
     with io.BytesIO() as buf:
         buf.write(b''.join(products.spec))
         buf.seek(0)
-        spec_file = '%s_spec.txt' % (prefix)
+        spec_file = os.path.join(output_dir, f'{name}_spec.txt')
         if not os.path.isfile(spec_file):
             _write_bytesio_to_file(spec_file, buf)
+
+
+def _write_kinematic_model_products(products, output_dir, name):
+    """This currently writes the WKAPP Products to file.
+
+    """
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_baroloinput.fits'), products.baroloinput)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_barolomod.fits'), products.barolomod)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_barolosurfdens.fits'), products.barolosurfdens)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_diagnosticplot.fits'), products.diagnosticplot)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_diffcube.fits'), products.diffcube)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fatinput.fits'), products.fatinput)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fatmod.fits'), products.fatmod)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fullresmodcube.fits'), products.fullresmodcube)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fullresproccube.fits'), products.fullresproccube)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_modcube.fits'), products.modcube)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_procdata.fits'), products.procdata)
 
 
 def get_slurm_output(source_name):
@@ -167,18 +184,11 @@ def get_catalog(tag):
     source_field_names.remove("id")
 
     # Get sources and detections
-    sources = [
-        Source.objects.get(id=sd.source_id) for sd in [
-            SourceDetection.objects.get(id=tsd.source_detection_id) for tsd in
-            TagSourceDetection.objects.filter(tag_id=Tag.objects.get(name=tag).id)
-        ]
-    ]
-    detections = [
-        Detection.objects.get(id=sd.detection_id) for sd in [
-            SourceDetection.objects.get(id=tsd.source_detection_id) for tsd in
-            TagSourceDetection.objects.filter(tag_id=Tag.objects.get(name=tag).id)
-        ]
-    ]
+    ir_tag = Tag.objects.get(name='Internal Release')
+    sds = [tsd.source_detection for tsd in TagSourceDetection.objects.filter(tag_id=Tag.objects.get(name=tag).id)]
+    sds_released = [sd for sd in sds if ir_tag in [tsd.tag for tsd in TagSourceDetection.objects.filter(source_detection=sd)]]
+    sources = [sd.source for sd in sds_released]
+    detections = [sd.detection for sd in sds_released]
 
     # Add columns to the table
     for field in source_field_names:
@@ -226,60 +236,64 @@ def get_catalog(tag):
     return table
 
 
-def save_catalog(tag, *args, **kwargs):
-    """Write catalog of tagged sources. Remove object columns for write to file.
-
-    """
-    table = get_catalog(tag)
-    table['comments'] = [''.join(comment) for comment in table['comments']]
-    table['tags'] = [''.join(t) for t in table['tags']]
-    table.write(*args, **kwargs)
-
-
-def save_products_for_source(tag, source_name, *args, **kwargs):
+def save_products_for_source(id, filename, *args, **kwargs):
     """Save source finding output products for a given source name.
 
     """
-    table = get_catalog(tag)
-    try:
-        idx = list(table['name']).index(source_name)
-        row = table[idx]
-    except Exception:
-        sys.stderr.write("Could not find source with provided name in tagged data.")
-        return None
-    detection = Detection.objects.get(id=row['id'])
+    detection = Detection.objects.get(id=id)
     products = Product.objects.get(detection=detection)
-
-    name = source_name.replace(' ', '_')
-    parent = f'{name}_products'
-    if not os.path.isdir(parent):
-        os.mkdir(parent)
+    if not os.path.isdir(filename):
+        os.mkdir(filename)
 
     # Write fits files
-    _write_products(products, f'{parent}/{name}')
-
+    _write_source_products(products, filename, detection.name.replace(' ', '_'))
     return
 
 
-def save_products(tag, *args, **kwargs):
-    """Save source finding output products for a given tag
+def save_source_products(table, filename, *args, **kwargs):
+    """Save source finding output products for a given table
 
     """
-    table = get_catalog(tag)
-    parent = '%s_products' % tag.replace(' ', '_')
-    if not os.path.isdir(parent):
-        os.mkdir(parent)
+    if not os.path.isdir(filename):
+        os.mkdir(filename)
 
     for row in table:
+        id = int(row['id'])
         name = row['name'].replace(' ', '_')
-        if not os.path.isdir(f'{parent}/{name}'):
-            os.mkdir(f'{parent}/{name}')
-        detection = Detection.objects.get(id=row['id'])
-        products = Product.objects.get(detection=detection)
-        _write_products(products, f'{parent}/{name}/{name}')
+        subdir = f'{filename}/{name}'
+        if not os.path.isdir(subdir):
+            os.mkdir(subdir)
+        save_products_for_source(id, subdir)
 
-    os.system(f'tar -czf {parent}.tar.gz {parent}')
+    os.system(f'tar -czf {filename}.tar.gz {filename}')
+    return
 
+
+def save_products_for_kinematic_model(id, filename, *args, **kwargs):
+    kinematic_model = KinematicModel.objects.get(id=id)
+    products = WKAPPProduct.objects.get(kinematic_model=kinematic_model)
+    if not os.path.isdir(filename):
+        os.mkdir(filename)
+    _write_kinematic_model_products(products, filename, kinematic_model.source.name.replace(' ', '_'))
+    return
+
+
+def save_kinematic_model_products(table, filename, *args, **kwargs):
+    """Save kinematic modelling output products for a table
+
+    """
+    if not os.path.isdir(filename):
+        os.mkdir(filename)
+
+    for row in table:
+        id = int(row['id'])
+        name = row['source'].replace(' ', '_')
+        subdir = f'{filename}/{name}'
+        if not os.path.isdir(subdir):
+            os.mkdir(subdir)
+        save_products_for_kinematic_model(id, subdir)
+
+    os.system(f'tar -czf {filename}.tar.gz {filename}')
     return
 
 
@@ -340,126 +354,26 @@ def get_spectrum(product):
         return np.loadtxt(buf, dtype="float", comments="#", unpack=True)
 
 
-# Retrieve DSS image from Skyview
-def retrieve_dss_image(longitude, latitude, width, height):
-    hdulist = SkyView.get_images(
-        position="{}, {}".format(longitude, latitude),
-        survey=["DSS"],
-        coordinates="J2000",
-        projection="Tan",
-        width=width*u.deg,
-        height=height*u.deg,
-        cache=None
-    )
-    return hdulist[0][0]
-
-
 # Create overview plot
-def overview_plot(id):
-    interval = PercentileInterval(95.0)
-    plt.rcParams["figure.figsize"] = (16, 12)
-    fig = plt.figure()
-
+def overview_plot(id, size=(8, 6)):
     # Retrieve products from database
-    products = Product.objects.get(detection=id)
+    detection = Detection.objects.get(id=id)
+    products = Product.objects.get(detection=detection)
+    plot = products.plot
+    if plot is None:
+        logging.error(f'No summary plot for detection {detection.name}')
+        return None
 
-    # Open moment 0 image
-    mom0, header = get_image(products.mom0)
-    mom1, header = get_image(products.mom1)
-    spectrum = get_spectrum(products.spec)
-    wcs = WCS(header)
-
-    # Extract coordinate information
-    nx = header["NAXIS1"]
-    ny = header["NAXIS2"]
-    lon, lat = wcs.all_pix2world(nx / 2, ny / 2, 0)
-    tmp1, tmp3 = wcs.all_pix2world(0, ny / 2, 0)
-    tmp2, tmp4 = wcs.all_pix2world(nx, ny / 2, 0)
-    width = np.rad2deg(
-        math.acos(
-            math.sin(np.deg2rad(tmp3)) * math.sin(np.deg2rad(tmp4)) +
-            math.cos(np.deg2rad(tmp3)) * math.cos(np.deg2rad(tmp4)) * math.cos(np.deg2rad(tmp1 - tmp2))
-        )
-    )
-    tmp1, tmp3 = wcs.all_pix2world(nx / 2, 0, 0)
-    tmp2, tmp4 = wcs.all_pix2world(nx / 2, ny, 0)
-    height = np.rad2deg(
-        math.acos(
-            math.sin(np.deg2rad(tmp3)) * math.sin(np.deg2rad(tmp4)) +
-            math.cos(np.deg2rad(tmp3)) * math.cos(np.deg2rad(tmp4)) * math.cos(np.deg2rad(tmp1 - tmp2))
-        )
-    )
-
-    # Plot DSS image with HI contours
-    try:
-        hdu_opt = retrieve_dss_image(lon, lat, width, height)
-        wcs_opt = WCS(hdu_opt.header)
-
-        bmin, bmax = interval.get_limits(hdu_opt.data)
-        ax = plt.subplot(2, 2, 2, projection=wcs_opt)
-        ax.imshow(hdu_opt.data, origin="lower")
-        ax.contour(
-            mom0,
-            transform=ax.get_transform(wcs),
-            levels=np.logspace(2.0, 5.0, 10),
-            colors="lightgrey",
-            alpha=1.0
-        )
-        ax.grid(color="grey", ls="solid")
-        ax.set_xlabel("Right ascension (J2000)")
-        ax.set_ylabel("Declination (J2000)")
-        ax.tick_params(axis="x", which="both", left=False, right=False)
-        ax.tick_params(axis="y", which="both", top=False, bottom=False)
-        ax.set_title("DSS + Moment 0")
-        ax.set_aspect(np.abs(wcs_opt.wcs.cdelt[1] / wcs_opt.wcs.cdelt[0]))
-    except Exception:
-        sys.stderr.write("Failed to retrieve DSS image.\n")
-        pass
-
-    # Plot moment 0
-    ax2 = plt.subplot(2, 2, 1, projection=wcs)
-    ax2.imshow(mom0, origin="lower")
-    ax2.grid(color="grey", ls="solid")
-    ax2.set_xlabel("Right ascension (J2000)")
-    ax2.set_ylabel("Declination (J2000)")
-    ax2.tick_params(axis="x", which="both", left=False, right=False)
-    ax2.tick_params(axis="y", which="both", top=False, bottom=False)
-    ax2.set_title("Moment 0")
-
-    # Add beam size
-    ax2.add_patch(Ellipse((5, 5), 5, 5, 0, edgecolor="grey", facecolor="grey"))
-
-    # Plot moment 1
-    bmin, bmax = interval.get_limits(mom1)
-    ax3 = plt.subplot(2, 2, 3, projection=wcs)
-    ax3.imshow(mom1, origin="lower", vmin=bmin, vmax=bmax, cmap=plt.get_cmap("gist_rainbow"))
-    ax3.grid(color="grey", ls="solid")
-    ax3.set_xlabel("Right ascension (J2000)")
-    ax3.set_ylabel("Declination (J2000)")
-    ax3.tick_params(axis="x", which="both", left=False, right=False)
-    ax3.tick_params(axis="y", which="both", top=False, bottom=False)
-    ax3.set_title("Moment 1")
-
-    # Plot spectrum
-    xaxis = spectrum[1] / 1e+6
-    data = 1000.0 * np.nan_to_num(spectrum[2])
-    xmin = np.nanmin(xaxis)
-    xmax = np.nanmax(xaxis)
-    ymin = np.nanmin(data)
-    ymax = np.nanmax(data)
-    ymin -= 0.1 * (ymax - ymin)
-    ymax += 0.1 * (ymax - ymin)
-    ax4 = plt.subplot(2, 2, 4)
-    ax4.step(xaxis, data, where="mid", color="royalblue")
-    ax4.set_xlabel("Frequency (MHz)")
-    ax4.set_ylabel("Flux density (mJy)")
-    ax4.set_title("Spectrum")
-    ax4.grid(True)
-    ax4.set_xlim([xmin, xmax])
-    ax4.set_ylim([ymin, ymax])
-
-    fig.canvas.draw()
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    fig.set_size_inches(*size)
+    img = mpimg.imread(io.BytesIO(plot))
+    plt.imshow(img)
+    plt.axis('off')
     plt.tight_layout()
+    ax = plt.gca()
+    ax.set_frame_on(False)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
 
     return plt
 

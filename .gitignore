@@ -149,3 +149,5 @@ cython_debug/
 
 # Notebooks
 *.ipynb
+notebook_env
+release.md
