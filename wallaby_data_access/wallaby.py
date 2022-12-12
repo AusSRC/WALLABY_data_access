@@ -4,6 +4,7 @@ import sys
 import csv
 import glob
 import logging
+import secrets
 import numpy as np
 from dotenv import load_dotenv
 import django
@@ -35,7 +36,16 @@ def connect(db="/mnt/shared/wallaby/apps/WALLABY_database", env="/mnt/shared/wal
     global SourceDetection, Comment, Tag, TagSourceDetection
     global Observation, ObservationMetadata, Tile, Postprocessing
     global KinematicModel, WKAPPProduct
-    load_dotenv(env)
+    if not os.path.exists(env):
+        logging.error('Input database credentials environment variable file not found. Specify environment variable file with wallaby.connect(env=$FILE_LOCATION).')
+    else:
+        load_dotenv(env)
+
+    # Django environment variables
+    os.environ['DJANGO_SECRET_KEY'] = secrets.token_urlsafe()
+    os.environ['DJANGO_SETTINGS_MODULE'] = "orm.settings"
+    os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = True
+
     sys.path.append(db)
     sys.path.append(db + "/orm")
     django.setup()
@@ -91,13 +101,13 @@ def _write_kinematic_model_products(products, output_dir, name):
     """This currently writes the WKAPP Products to file.
 
     """
-    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_baroloinput.fits'), products.baroloinput)
-    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_barolomod.fits'), products.barolomod)
-    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_barolosurfdens.fits'), products.barolosurfdens)
-    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_diagnosticplot.fits'), products.diagnosticplot)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_baroloinput.txt'), products.baroloinput)  # txt
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_barolomod.txt'), products.barolomod)  # txt
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_barolosurfdens.txt'), products.barolosurfdens)  # txt
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_diagnosticplot.png'), products.diagnosticplot)  # png
     _write_zipped_fits_file(os.path.join(output_dir, f'{name}_diffcube.fits'), products.diffcube)
-    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fatinput.fits'), products.fatinput)
-    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fatmod.fits'), products.fatmod)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fatinput.txt'), products.fatinput)
+    _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fatmod.txt'), products.fatmod)
     _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fullresmodcube.fits'), products.fullresmodcube)
     _write_zipped_fits_file(os.path.join(output_dir, f'{name}_fullresproccube.fits'), products.fullresproccube)
     _write_zipped_fits_file(os.path.join(output_dir, f'{name}_modcube.fits'), products.modcube)
