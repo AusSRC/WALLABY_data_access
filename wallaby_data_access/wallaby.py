@@ -39,8 +39,12 @@ def connect(
     global SourceDetection, Comment, Tag, TagSourceDetection
     global Observation, ObservationMetadata, Tile, Postprocessing
     global KinematicModel, WKAPPProduct
+
+    # Attempt to get database credentials from environment variables
+    db_env = ['DATABASE_USER', 'DATABASE_PASS', 'DATABASE_HOST', 'DATABASE_NAME']
     if not os.path.exists(env):
-        logging.error("Input database credentials environment variable file not found.")
+        if any([os.getenv(e) is None for e in db_env]):
+            logging.error("Input database credentials environment variable file not found.")
     else:
         load_dotenv(env)
 

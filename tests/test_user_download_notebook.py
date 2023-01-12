@@ -21,7 +21,7 @@ def django_setup():
     if 'WALLABY_DATABASE_PATH' in os.environ:
         wallaby.connect(os.environ['WALLABY_DATABASE_PATH'])
     else:
-        wallaby.connect(db="/Users/she393/Documents/WALLABY_database", env="/Users/she393/Documents/WALLABY_data_access/wallaby_data_access/.env")
+        wallaby.connect()
 
 
 def test_print_tags():
@@ -44,7 +44,7 @@ def test_download_catalog():
     table = wallaby.get_catalog(TAG_NAME)
     table['comments'] = [''.join(comment) for comment in table['comments']]
     table['tags'] = [''.join(t) for t in table['tags']]
-    table.write(filename, format = 'fits')
+    table.write(filename, format='fits')
     os.remove(filename)
 
 
@@ -75,7 +75,7 @@ def test_write_kinematic_model_table():
             string_array.append(string_elem)
         kin_table[column] = string_array
 
-    kin_table.write(filename, format = 'fits')
+    kin_table.write(filename, format='fits')
     assert (os.path.exists(filename))
     os.remove(filename)
 
