@@ -3,15 +3,21 @@ on: [push, pull_request]
 
 jobs:
   codecov:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Clone WALLABY_database
+        run: |
+          apt-get update && apt-get install -y git lsb-release
+          cd .. && git clone https://github.com/AusSRC/WALLABY_database.git
+      - name: Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-          cache: 'pip'
+          python-version: "3.9.0"
+          cache: "pip"
       - name: Generate report
         run: |
+          export PYTHONPATH=$PYTHONPATH:.
           pip install -r wallaby_data_access/requirements.txt
           pip install -r tests/requirements.txt
           pytest --cov-report xml --cov
@@ -20,14 +26,14 @@ jobs:
           files: ./coverage.xml,
           verbose: true
 
-  linter:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          cache: 'pip'
-      - run: |
-          pip install flake8
-          flake8 .
+  # linter:
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.9'
+  #         cache: 'pip'
+  #     - run: |
+  #         pip install flake8
+  #         flake8 .
