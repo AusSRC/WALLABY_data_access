@@ -3,13 +3,13 @@ on: [push, pull_request]
 
 jobs:
   codecov:
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Clone WALLABY_database
         run: |
           apt-get update && apt-get install -y git lsb-release
-          cd .. && git clone https://github.com/AusSRC/WALLABY_database.git
+          git clone https://github.com/AusSRC/WALLABY_database.git $HOME
       - name: Python
         uses: actions/setup-python@v4
         with:
@@ -17,7 +17,7 @@ jobs:
           cache: "pip"
       - name: Generate report
         run: |
-          export PYTHONPATH=$PYTHONPATH:.
+          export PYTHONPATH=$PYTHONPATH:$HOME
           pip install -r wallaby_data_access/requirements.txt
           pip install -r tests/requirements.txt
           pytest --cov-report xml --cov
