@@ -26,7 +26,7 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:.
           pip install -r wallaby_data_access/requirements.txt
           pip install -r tests/requirements.txt
-          pytest --cov-report xml --cov
+          pytest -v --cov-report xml --cov
       - uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml,

@@ -41,6 +41,11 @@ def connect(
     global KinematicModel, WKAPPProduct
 
     # Attempt to get database credentials from environment variables
+    if 'WALLABY_DATABASE_PATH' in os.environ:
+        db = os.environ['WALLABY_DATABASE_PATH']
+    if 'WALLABY_DATABASE_CRED' in os.environ:
+        env = os.environ['WALLABY_DATABASE_CRED']
+
     db_env = ['DATABASE_USER', 'DATABASE_PASS', 'DATABASE_HOST', 'DATABASE_NAME']
     if not os.path.exists(env):
         if any([os.getenv(e) is None for e in db_env]):
