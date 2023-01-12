@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   codecov:
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - name: Clone WALLABY_database
