@@ -10,11 +10,6 @@ jobs:
         run: |
           apt-get update && apt-get install -y git lsb-release
           cd .. && git clone https://github.com/AusSRC/WALLABY_database.git
-      - name: Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9.0"
-          cache: "pip"
       - name: Generate report
         env:
           DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
