@@ -1,0 +1,3 @@
+[run]
+include = wallaby_data_access/*
+omit = tests/*

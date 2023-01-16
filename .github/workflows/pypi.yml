@@ -1,0 +1,25 @@
+name: PyPI publish release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  pypi:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Set release version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - name: Build release
+        run: |
+          pip install twine
+          python setup.py sdist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
