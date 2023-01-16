@@ -5,7 +5,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  metadata:
+  pypi:
     runs-on: ubuntu-20.04
     steps:
       - name: Set release version
