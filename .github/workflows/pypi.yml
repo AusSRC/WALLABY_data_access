@@ -16,8 +16,6 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
       - name: Build release
-        env:
-          RELEASE_VERSION: $RELEASE_VERSION
         run: |
           pip install twine
           python setup.py sdist
