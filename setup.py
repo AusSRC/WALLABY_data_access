@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 from setuptools import setup
 
 # Set version as environment variable
@@ -11,10 +12,15 @@ match = semver_regex.search(version)
 if match is None:
     raise Exception('Module version must follow semantic versioning format (e.g. v1.0.0)')
 
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     name='wallaby_data_access',
     version=match.group(),
-    description='Module for accessing WALLABY internal release data ',
+    description='Module for accessing WALLABY internal release data',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/AusSRC/WALLABY_data_access',
     author='Austin Shen',
     author_email='austin.shen@csiro.au',
