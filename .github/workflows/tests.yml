@@ -6,9 +6,8 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - name: Clone WALLABY_database
+      - name: Clone WALLABY database
         run: |
-          apt-get update && apt-get install -y git lsb-release
           [[ -d WALLABY_database ]] || git clone https://github.com/AusSRC/WALLABY_database.git
       - name: Generate report
         env:
@@ -21,7 +20,7 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:$WALLABY_DATABASE_PATH:.
           pip install -r wallaby_data_access/requirements.txt
           pip install -r tests/requirements.txt
-          pytest -v --cov-report xml --cov=./tests
+          pytest tests -v --cov-report xml --cov
       - uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml,
