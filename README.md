@@ -1,4 +1,7 @@
-# WALLABY data access
+<h1 align="center">WALLABY data access</h1>
+
+[![Tests](https://github.com/AusSRC/WALLABY_data_access/actions/workflows/tests.yml/badge.svg)](https://github.com/AusSRC/WALLABY_data_access/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/AusSRC/WALLABY_data_access/branch/main/graph/badge.svg?token=W8NYIB48T1)](https://codecov.io/gh/AusSRC/WALLABY_data_access)
 
 Python module with tools for accessing internal release data from the WALLABY database
 
@@ -25,10 +28,6 @@ import wallaby_data_access as wallaby
 wallaby.connect(db='<PATH_TO_WALLABY_database>', env='<PATH_TO_.env>')
 ```
 
-## Testing
-
-Inside the [`tests`](tests/) subdirectory we have files for testing the source code, and a [`Dockerfile`](tests/Dockerfile). The Dockerfile is used to create the image that is run in through Github Actions (pre-installed with the `WALLABY_database`) repository cloned.
-
 ## Release
 
 [Official PyPI package](https://pypi.org/project/wallaby-data-access/)
@@ -40,3 +39,7 @@ export RELEASE_VERSION=<version>
 python setup.py sdist
 twine upload dist/*
 ```
+
+## Coverage
+
+<img src="https://codecov.io/gh/AusSRC/WALLABY_data_access/branch/main/graphs/tree.svg?token=W8NYIB48T1" />
