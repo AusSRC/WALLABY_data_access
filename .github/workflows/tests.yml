@@ -16,7 +16,7 @@ jobs:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DATABASE_PASS: ${{ secrets.DATABASE_PASS }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          WALLABY_DATABASE_PATH: ${{ secrets.WALLABY_DATABASE_PATH }}
+          WALLABY_DATABASE_PATH: $HOME/WALLABY_database/
         run: |
           export PYTHONPATH=$PYTHONPATH:.
           pip install -r wallaby_data_access/requirements.txt
