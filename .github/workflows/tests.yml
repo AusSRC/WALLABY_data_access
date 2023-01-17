@@ -3,22 +3,18 @@ on: [push, pull_request]
 
 jobs:
   codecov:
-    runs-on: self-hosted
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Clone WALLABY_database
-        run: |
-          apt-get update && apt-get install -y git lsb-release
-          cd .. && git clone https://github.com/AusSRC/WALLABY_database.git
       - name: Generate report
         env:
           DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DATABASE_PASS: ${{ secrets.DATABASE_PASS }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          WALLABY_DATABASE_PATH: $HOME/WALLABY_database/
+          WALLABY_DATABASE_PATH: ../WALLABY_database
         run: |
-          export PYTHONPATH=$PYTHONPATH:.
+          export PYTHONPATH=$PYTHONPATH:$WALLABY_DATABASE_PATH:.
           pip install -r wallaby_data_access/requirements.txt
           pip install -r tests/requirements.txt
           pytest -v --cov-report xml --cov

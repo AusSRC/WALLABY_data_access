@@ -4,7 +4,6 @@ Test code in cells of user download notebook.
 """
 
 import os
-import glob
 import shutil
 import pytest
 import warnings
