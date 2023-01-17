@@ -41,15 +41,17 @@ def connect(
     global KinematicModel, WKAPPProduct
 
     # Attempt to get database credentials from environment variables
-    if 'WALLABY_DATABASE_PATH' in os.environ:
-        db = os.environ['WALLABY_DATABASE_PATH']
-    if 'WALLABY_DATABASE_CRED' in os.environ:
-        env = os.environ['WALLABY_DATABASE_CRED']
+    if "WALLABY_DATABASE_PATH" in os.environ:
+        db = os.environ["WALLABY_DATABASE_PATH"]
+    if "WALLABY_DATABASE_CRED" in os.environ:
+        env = os.environ["WALLABY_DATABASE_CRED"]
 
-    db_env = ['DATABASE_USER', 'DATABASE_PASS', 'DATABASE_HOST', 'DATABASE_NAME']
+    db_env = ["DATABASE_USER", "DATABASE_PASS", "DATABASE_HOST", "DATABASE_NAME"]
     if not os.path.exists(env):
         if any([os.getenv(e) is None for e in db_env]):
-            logging.error("Input database credentials environment variable file not found.")
+            logging.error(
+                "Input database credentials environment variable file not found."
+            )
     else:
         load_dotenv(env)
 
@@ -69,7 +71,7 @@ def connect(
     return
 
 
-def _write_bytesio_to_file(filename, bytesio):
+def _write_bytes(filename, bytesio):
     """Write the contents of the given BytesIO to a file.
     Creates the file or overwrites the file if it does
     not exist yet.
@@ -80,82 +82,58 @@ def _write_bytesio_to_file(filename, bytesio):
         outfile.write(bytesio.getbuffer())
 
 
-def _write_zipped_fits_file(filename, product, compress=True):
+def _write_fits(filename, product, compress=True):
     """Compress a .fits file as .fits.gz for a data product."""
     with io.BytesIO() as buf:
         buf.write(product)
         buf.seek(0)
         if not os.path.isfile(filename):
-            _write_bytesio_to_file(filename, buf)
+            _write_bytes(filename, buf)
             if compress:
                 os.system(f"gzip {filename}")
 
 
-def _write_source_products(products, output_dir, name):
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_cube.fits"), products.cube
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_chan.fits"), products.chan
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_mask.fits"), products.mask
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_mom0.fits"), products.mom0
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_mom1.fits"), products.mom1
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_mom2.fits"), products.mom2
-    )
+def _write_source_products(products, output_dir, prefix):
+    _write_fits(os.path.join(output_dir, f"{prefix}_cube.fits"), products.cube)
+    _write_fits(os.path.join(output_dir, f"{prefix}_chan.fits"), products.chan)
+    _write_fits(os.path.join(output_dir, f"{prefix}_mask.fits"), products.mask)
+    _write_fits(os.path.join(output_dir, f"{prefix}_mom0.fits"), products.mom0)
+    _write_fits(os.path.join(output_dir, f"{prefix}_mom1.fits"), products.mom1)
+    _write_fits(os.path.join(output_dir, f"{prefix}_mom2.fits"), products.mom2)
 
     # Open spectrum
     with io.BytesIO() as buf:
         buf.write(b"".join(products.spec))
         buf.seek(0)
-        spec_file = os.path.join(output_dir, f"{name}_spec.txt")
+        spec_file = os.path.join(output_dir, f"{prefix}_spec.txt")
         if not os.path.isfile(spec_file):
-            _write_bytesio_to_file(spec_file, buf)
+            _write_bytes(spec_file, buf)
 
 
-def _write_kinematic_model_products(products, output_dir, name):
+def _write_kinematic_model_products(products, output_dir, prefix):
     """This currently writes the WKAPP Products to file."""
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_baroloinput.txt"), products.baroloinput
+    _write_fits(
+        os.path.join(output_dir, f"{prefix}_baroloinput.txt"), products.baroloinput
     )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_barolomod.txt"), products.barolomod
+    _write_fits(os.path.join(output_dir, f"{prefix}_barolomod.txt"), products.barolomod)
+    _write_fits(
+        os.path.join(output_dir, f"{prefix}_barolosurfdens.txt"), products.barolosurfdens
     )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_barolosurfdens.txt"), products.barolosurfdens
+    _write_fits(
+        os.path.join(output_dir, f"{prefix}_diagnosticplot.png"), products.diagnosticplot
     )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_diagnosticplot.png"), products.diagnosticplot
+    _write_fits(os.path.join(output_dir, f"{prefix}_diffcube.fits"), products.diffcube)
+    _write_fits(os.path.join(output_dir, f"{prefix}_fatinput.txt"), products.fatinput)
+    _write_fits(os.path.join(output_dir, f"{prefix}_fatmod.txt"), products.fatmod)
+    _write_fits(
+        os.path.join(output_dir, f"{prefix}_fullresmodcube.fits"), products.fullresmodcube
     )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_diffcube.fits"), products.diffcube
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_fatinput.txt"), products.fatinput
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_fatmod.txt"), products.fatmod
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_fullresmodcube.fits"), products.fullresmodcube
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_fullresproccube.fits"),
+    _write_fits(
+        os.path.join(output_dir, f"{prefix}_fullresproccube.fits"),
         products.fullresproccube,
     )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_modcube.fits"), products.modcube
-    )
-    _write_zipped_fits_file(
-        os.path.join(output_dir, f"{name}_procdata.fits"), products.procdata
-    )
+    _write_fits(os.path.join(output_dir, f"{prefix}_modcube.fits"), products.modcube)
+    _write_fits(os.path.join(output_dir, f"{prefix}_procdata.fits"), products.procdata)
 
 
 def get_slurm_output(source_name):
@@ -304,14 +282,15 @@ def get_catalog(tag):
 
 
 def save_products_for_source(id, filename, *args, **kwargs):
-    """Save source finding output products for a given source name."""
+    """Save source finding output products for a given detection id."""
     detection = Detection.objects.get(id=id)
     products = Product.objects.get(detection=detection)
     if not os.path.isdir(filename):
         os.mkdir(filename)
+    prefix = detection.name.replace(" ", "_")
 
     # Write fits files
-    _write_source_products(products, filename, detection.name.replace(" ", "_"))
+    _write_source_products(products, filename, prefix)
     return
 
 
@@ -555,32 +534,32 @@ def casda_deposit(table, deposit_name):
         filename_prefix = f"{name}_{release}"
 
         # write .fits files
-        _write_zipped_fits_file(
+        _write_fits(
             "%s/%s/%s_cube.fits" % (deposit_name, "cubelets", filename_prefix),
             products.cube,
             compress=False,
         )  # noqa
-        _write_zipped_fits_file(
+        _write_fits(
             "%s/%s/%s_chan.fits" % (deposit_name, "moment_maps", filename_prefix),
             products.chan,
             compress=False,
         )  # noqa
-        _write_zipped_fits_file(
+        _write_fits(
             "%s/%s/%s_mask.fits" % (deposit_name, "cubelets", filename_prefix),
             products.mask,
             compress=False,
         )  # noqa
-        _write_zipped_fits_file(
+        _write_fits(
             "%s/%s/%s_mom0.fits" % (deposit_name, "moment_maps", filename_prefix),
             products.mom0,
             compress=False,
         )  # noqa
-        _write_zipped_fits_file(
+        _write_fits(
             "%s/%s/%s_mom1.fits" % (deposit_name, "moment_maps", filename_prefix),
             products.mom1,
             compress=False,
         )  # noqa
-        _write_zipped_fits_file(
+        _write_fits(
             "%s/%s/%s_mom2.fits" % (deposit_name, "moment_maps", filename_prefix),
             products.mom2,
             compress=False,
@@ -590,10 +569,11 @@ def casda_deposit(table, deposit_name):
         )
 
         # add source name to each header file
-        product_files = glob.glob(f"{deposit_name}/{name}_{release}*.fits")
+        product_files = glob.glob(f"{deposit_name}/**/*{name}*.fits", recursive=True)
         for f in product_files:
             hdul = fits.open(f, "update")
             hdr = hdul[0].header
+            hdr["OBJECT"] = row["name"]
             hdr["WALTR"] = release
             hdul.close()
 
@@ -608,15 +588,22 @@ def casda_deposit(table, deposit_name):
 
     # Read columns and metadata
     table_columns = {}
-    module_path = os.path.dirname(os.path.abspath(__file__))
-    with open(f"{module_path}/source_column_metadata.csv", "r") as file:
+    module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    with open(f"{module_path}/etc/source_column_metadata.csv", "r") as file:
         reader = csv.reader(file)
         for row in reader:
             name, ucd, units, description = row
-            units = units.replace("pixel", "pix")
             if units == "-":
-                units = None
+                units = ""
             table_columns[name] = (ucd, units, description)
+
+    # Update columns for write output
+    table["comments"] = [", ".join(c) for c in table["comments"]]
+    table.rename_column("flag", "qflag")
+
+    # Get rows with kinematic models
+    # TODO: fetch kinematic models from database and populate this column with those values
+    table["kflag"] = [0] * len(table)
 
     # Export catalogue
     column_names = [k for k in table_columns.keys()]

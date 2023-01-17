@@ -4,6 +4,7 @@ Test code in cells of user download notebook.
 """
 
 import os
+import glob
 import shutil
 import pytest
 import warnings
@@ -49,8 +50,16 @@ def test_download_products():
     table = wallaby.get_catalog(TAG_NAME)
     row = table[0]
     source_id = int(row['id'])
-    filename = f'{SOURCE_NAME.replace(" ", "_")}_products'
+    filename = f'{SOURCE_NAME.replace(" ", "_")}_{TAG_NAME}_products'
     wallaby.save_products_for_source(source_id, filename)
+
+    # TODO: do we want to include the tests below?
+    # Test output product names include tag and source name
+    # product_files = glob.glob(f'{filename}/*.fits*', recursive=True)
+    # for f in product_files:
+    #     basename = os.path.basename(f)
+    #     assert (row['name'].replace(' ', '_') in basename)
+    #     assert (TAG_NAME in basename)
     shutil.rmtree(filename)
 
 

@@ -14,25 +14,25 @@ kflag,meta.code,-,Kinematic model flag
 n_pix,meta.number;instr.pixel,-,Number of pixels in 3D source mask
 f_min,phot.flux.density;stat.min,Jy/beam,Lowest flux density value within 3D source mask
 f_max,phot.flux.density;stat.max,Jy/beam,Highest flux density value within 3D source mask
-ell_maj,phys.angSize,pixel,Major axis size of ellipse fitted to moment 0 map
-ell_min,phys.angSize,pixel,Minor axis size of ellipse fitted to moment 0 map
+ell_maj,phys.angSize,pix,Major axis size of ellipse fitted to moment 0 map
+ell_min,phys.angSize,pix,Minor axis size of ellipse fitted to moment 0 map
 ell_pa,pos.posAng,deg,Position angle of ellipse fitted to moment 0 map
-ell3s_maj,phys.angSize,pixel,Same as ell maj but > 3 sigma pixels only and equal weight
-ell3s_min,phys.angSize,pixel,Same as ell min but > 3 sigma pixels only and equal weight
+ell3s_maj,phys.angSize,pix,Same as ell maj but > 3 sigma pixels only and equal weight
+ell3s_min,phys.angSize,pix,Same as ell min but > 3 sigma pixels only and equal weight
 ell3s_pa,pos.posAng,deg,Same as ell pa but > 3 sigma pixels only and equal weight
-x,pos.cartesian.x,pixel,Centroid position in x
-err_x,stat.error;pos.cartesian.x,pixel,Statistical uncertainty of centroid position in x
-y,pos.cartesian.y,pixel,Centroid position in y
-err_y,stat.error;pos.cartesian.y,pixel,Statistical uncertainty of centroid position in y
-z,pos.cartesian.z,pixel,Centroid position in z
-err_z,stat.error;pos.cartesian.z,pixel,Statistical uncertainty of centroid position in z
-x_min,pos.cartesian.x;stat.min,pixel,Lower end of bounding box in x
-x_max,pos.cartesian.x;stat.max,pixel,Upper end of bounding box in x
-y_min,pos.cartesian.y;stat.min,pixel,Lower end of bounding box in y
-y_max,pos.cartesian.y;stat.max,pixel,Upper end of bounding box in y
-z_min,pos.cartesian.z;stat.min,pixel,Lower end of bounding box in z
-z_max,pos.cartesian.z;stat.max,pixel,Upper end of bounding box in z
+x,pos.cartesian.x,pix,Centroid position in x
+err_x,stat.error;pos.cartesian.x,pix,Statistical uncertainty of centroid position in x
+y,pos.cartesian.y,pix,Centroid position in y
+err_y,stat.error;pos.cartesian.y,pix,Statistical uncertainty of centroid position in y
+z,pos.cartesian.z,pix,Centroid position in z
+err_z,stat.error;pos.cartesian.z,pix,Statistical uncertainty of centroid position in z
+x_min,pos.cartesian.x;stat.min,pix,Lower end of bounding box in x
+x_max,pos.cartesian.x;stat.max,pix,Upper end of bounding box in x
+y_min,pos.cartesian.y;stat.min,pix,Lower end of bounding box in y
+y_max,pos.cartesian.y;stat.max,pix,Upper end of bounding box in y
+z_min,pos.cartesian.z;stat.min,pix,Lower end of bounding box in z
+z_max,pos.cartesian.z;stat.max,pix,Upper end of bounding box in z
 comments,meta.note,-,Comments on individual sources
 team_release,meta.dataset;meta.main,-,Internal WALLABY team release identifier
 dist_h,pos.distance,Mpc,Local Hubble distance derived from the barycentric source frequency
-log_m_hi,phys.mass,Msol,HI mass log(M_hi/M_sol) derived from the local Hubble distance
+log_m_hi,phys.mass,solMass,HI mass log(M_hi/M_sol) derived from the local Hubble distance

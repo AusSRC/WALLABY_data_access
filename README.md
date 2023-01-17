@@ -24,3 +24,19 @@ Once these files are in your working directory you can specify them in the `conn
 import wallaby_data_access as wallaby
 wallaby.connect(db='<PATH_TO_WALLABY_database>', env='<PATH_TO_.env>')
 ```
+
+## Testing
+
+Inside the [`tests`](tests/) subdirectory we have files for testing the source code, and a [`Dockerfile`](tests/Dockerfile). The Dockerfile is used to create the image that is run in through Github Actions (pre-installed with the `WALLABY_database`) repository cloned.
+
+## Release
+
+[Official PyPI package](https://pypi.org/project/wallaby-data-access/)
+
+We can release to PyPI manually or automatically through our [action](.github/workflows/pypi.yml). To release manually:
+
+```
+export RELEASE_VERSION=<version>
+python setup.py sdist
+twine upload dist/*
+```
