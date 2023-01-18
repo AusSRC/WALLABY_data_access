@@ -1,6 +1,7 @@
 <h1 align="center">WALLABY data access</h1>
 
 [![Tests](https://github.com/AusSRC/WALLABY_data_access/actions/workflows/tests.yml/badge.svg)](https://github.com/AusSRC/WALLABY_data_access/actions/workflows/tests.yml)
+[![PyPI publish release](https://github.com/AusSRC/WALLABY_data_access/actions/workflows/pypi.yml/badge.svg)](https://github.com/AusSRC/WALLABY_data_access/actions/workflows/pypi.yml)
 [![codecov](https://codecov.io/gh/AusSRC/WALLABY_data_access/branch/main/graph/badge.svg?token=W8NYIB48T1)](https://codecov.io/gh/AusSRC/WALLABY_data_access)
 
 Python module with tools for accessing internal release data from the WALLABY database
